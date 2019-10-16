@@ -1,0 +1,10 @@
+# topic
+experiment
+# fog broker ip
+192.168.0.105
+# fog broker port
+1883
+# cloud broker ip
+34.253.52.154
+# cloud broker port
+1883

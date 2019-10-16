@@ -1,0 +1,93 @@
+<!--
+  Generated template for the SendDatasetPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>sendDataset</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+  
+  <ion-card>
+
+    <ion-card-header>
+      Mqtt Configurations
+    </ion-card-header>
+  
+    <ion-card-content>
+      
+      <ion-list>
+      
+        <ion-item>
+          <ion-label floating>Broker IP</ion-label>
+          <ion-input [(ngModel)]="ip" type="text"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label floating>Broker Port</ion-label>
+          <ion-input [(ngModel)]="port" min="1" type="number"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label floating>Topic</ion-label>
+          <ion-input [(ngModel)]="topic" type="text"></ion-input>
+        </ion-item>
+        
+        <ion-item>
+          <ion-label floating>User name</ion-label>
+          <ion-input [(ngModel)]="userName" type="text"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label floating>Password</ion-label>
+          <ion-input [(ngModel)]="password" type="password"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label>Use SSL</ion-label>
+          <ion-checkbox [(ngModel)]="SSL" disabled="false"></ion-checkbox>
+        </ion-item>
+
+      </ion-list>
+
+      <div style="margin: -2px">
+        <ion-list radio-group [(ngModel)]="type">
+          <ion-list-header>
+            Type of data
+          </ion-list-header>
+        
+          <ion-item>
+            <ion-label>Fall</ion-label>
+            <ion-radio checked="true" value="fall"></ion-radio>
+          </ion-item>
+        
+          <ion-item>
+            <ion-label>Activity of daily living</ion-label>
+            <ion-radio value="adl"></ion-radio>
+          </ion-item>
+
+        </ion-list>
+      </div>
+      <div>
+        <ion-item>
+          <ion-label floating>Observation</ion-label>
+          <ion-input type="text" [(ngModel)]="observation"></ion-input>
+        </ion-item>
+      </div>
+
+    </ion-card-content>
+  
+  </ion-card>
+
+  <div>
+    <button ion-button block (click)="sendData()" color="primary">Send</button>
+  </div>
+
+</ion-content>

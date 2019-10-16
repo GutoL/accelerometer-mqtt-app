@@ -1,0 +1,7 @@
+{
+  "name": "accelerometer",
+  "integrations": {
+    "cordova": {}
+  },
+  "type": "ionic-angular"
+}
