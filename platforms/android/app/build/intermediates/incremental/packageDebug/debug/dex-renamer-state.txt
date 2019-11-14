@@ -1,4 +1,4 @@
-#Wed Dec 26 15:03:13 BRT 2018
-base.0=/home/guto/bitbucket/accelerometer-mqtt-app/platforms/android/app/build/intermediates/transforms/dexMerger/debug/0
+#Thu Nov 14 09:24:55 BRT 2019
+base.0=/home/guto/Desktop/accelerometer-mqtt-app/platforms/android/app/build/intermediates/transforms/dexMerger/debug/0
 path.0=classes.dex
 renamed.0=classes.dex

@@ -14,7 +14,7 @@
 
 
 <ion-content padding>
-
+  
   <ion-card>
 
     <ion-card-header>
@@ -53,6 +53,11 @@
         <ion-item>
           <ion-label>Use SSL</ion-label>
           <ion-checkbox [(ngModel)]="SSL" disabled="false"></ion-checkbox>
+        </ion-item>
+
+        <ion-item>
+          <ion-label>Get Location?</ion-label>
+          <ion-checkbox [(ngModel)]="getLocation" disabled="false"></ion-checkbox>
         </ion-item>
 
       </ion-list>
@@ -109,6 +114,8 @@
       x value: {{x}} <br>
       y value: {{y}} <br>
       z value: {{z}} <br>
+      latitude: {{locationCoords.latitude}} <br>
+      latitude: {{locationCoords.longitude}} <br>
       
     </ion-card-content>
   </ion-card>

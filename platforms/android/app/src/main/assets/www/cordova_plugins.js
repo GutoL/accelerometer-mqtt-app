@@ -9,6 +9,30 @@ module.exports = [
     ]
   },
   {
+    "id": "cordova-plugin-device-motion.Acceleration",
+    "file": "plugins/cordova-plugin-device-motion/www/Acceleration.js",
+    "pluginId": "cordova-plugin-device-motion",
+    "clobbers": [
+      "Acceleration"
+    ]
+  },
+  {
+    "id": "cordova-plugin-device-motion.accelerometer",
+    "file": "plugins/cordova-plugin-device-motion/www/accelerometer.js",
+    "pluginId": "cordova-plugin-device-motion",
+    "clobbers": [
+      "navigator.accelerometer"
+    ]
+  },
+  {
+    "id": "cordova-plugin-ionic-keyboard.keyboard",
+    "file": "plugins/cordova-plugin-ionic-keyboard/www/android/keyboard.js",
+    "pluginId": "cordova-plugin-ionic-keyboard",
+    "clobbers": [
+      "window.Keyboard"
+    ]
+  },
+  {
     "id": "cordova-plugin-ionic-webview.IonicWebView",
     "file": "plugins/cordova-plugin-ionic-webview/src/www/util.js",
     "pluginId": "cordova-plugin-ionic-webview",
@@ -33,27 +57,25 @@ module.exports = [
     ]
   },
   {
-    "id": "cordova-plugin-ionic-keyboard.keyboard",
-    "file": "plugins/cordova-plugin-ionic-keyboard/www/android/keyboard.js",
-    "pluginId": "cordova-plugin-ionic-keyboard",
+    "id": "cordova-plugin-geolocation.geolocation",
+    "file": "plugins/cordova-plugin-geolocation/www/android/geolocation.js",
+    "pluginId": "cordova-plugin-geolocation",
     "clobbers": [
-      "window.Keyboard"
+      "navigator.geolocation"
     ]
   },
   {
-    "id": "cordova-plugin-device-motion.Acceleration",
-    "file": "plugins/cordova-plugin-device-motion/www/Acceleration.js",
-    "pluginId": "cordova-plugin-device-motion",
-    "clobbers": [
-      "Acceleration"
-    ]
+    "id": "cordova-plugin-geolocation.PositionError",
+    "file": "plugins/cordova-plugin-geolocation/www/PositionError.js",
+    "pluginId": "cordova-plugin-geolocation",
+    "runs": true
   },
   {
-    "id": "cordova-plugin-device-motion.accelerometer",
-    "file": "plugins/cordova-plugin-device-motion/www/accelerometer.js",
-    "pluginId": "cordova-plugin-device-motion",
+    "id": "cordova-plugin-android-permissions.Permissions",
+    "file": "plugins/cordova-plugin-android-permissions/www/permissions.js",
+    "pluginId": "cordova-plugin-android-permissions",
     "clobbers": [
-      "navigator.accelerometer"
+      "cordova.plugins.permissions"
     ]
   }
 ];
@@ -61,12 +83,14 @@ module.exports.metadata =
 // TOP OF METADATA
 {
   "cordova-plugin-device": "2.0.2",
+  "cordova-plugin-device-motion": "2.0.1",
+  "cordova-plugin-ionic-keyboard": "2.1.3",
   "cordova-plugin-ionic-webview": "2.1.4",
   "cordova-plugin-splashscreen": "5.0.2",
   "cordova-plugin-statusbar": "2.4.2",
   "cordova-plugin-whitelist": "1.3.3",
-  "cordova-plugin-ionic-keyboard": "2.1.3",
-  "cordova-plugin-device-motion": "2.0.1"
+  "cordova-plugin-geolocation": "4.0.2",
+  "cordova-plugin-android-permissions": "1.0.2"
 };
 // BOTTOM OF METADATA
 });

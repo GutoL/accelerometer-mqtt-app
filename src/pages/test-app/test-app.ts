@@ -7,6 +7,9 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/interval';
 import 'rxjs/add/observable/forkJoin';
 
+import { Geolocation } from '@ionic-native/geolocation/ngx';
+
+
 /**
  * Generated class for the TestAppPage page.
  *
@@ -20,6 +23,10 @@ import 'rxjs/add/observable/forkJoin';
   templateUrl: 'test-app.html',
 })
 export class TestAppPage {
+
+  locationCoords: any;
+  watch: any;
+  subscriptionGPS: any;
 
   windowTime: number;
   frequency: number;
@@ -44,6 +51,7 @@ export class TestAppPage {
   userName: string = 'bvmodozi';
   password: string = '1jPErVdZYG0G';
   SSL: boolean = true;
+  getLocation: boolean = false;
 
   // dataToSend: any;
   // ip:string = "192.168.0.137";
@@ -58,13 +66,19 @@ export class TestAppPage {
   sub: Subscription;
 
   constructor(public navCtrl: NavController, public navParams: NavParams, 
-    private deviceMotion: DeviceMotion, private alert: AlertController) {
+    private deviceMotion: DeviceMotion, private alert: AlertController,
+    private geolocation: Geolocation){
     
-    this.haveTime = false;
-    this.timeout = 10;
-    this.windowTime = 5;
-    this.frequency = 200;
-    this.showAccelerometerValues = false;
+      this.locationCoords = {
+        latitude: "",
+        longitude: ""
+      }
+
+      this.haveTime = false;
+      this.timeout = 10;
+      this.windowTime = 5;
+      this.frequency = 200;
+      this.showAccelerometerValues = false;
   }
 
   ionViewDidLoad() {
@@ -91,6 +105,10 @@ export class TestAppPage {
       });
       alert.present();
       return false;
+    }
+
+    if(this.getLocation){
+      this.startLocationMonitoring();
     }
 
     this.showAccelerometerValues = true;
@@ -152,6 +170,8 @@ export class TestAppPage {
       this.sub.unsubscribe();
       this.subscription.unsubscribe();
 
+      this.stopLocationMonitoring();
+
       const alert = this.alert.create({
         title: "Stop",
         subTitle: "Finishing the experiment!",
@@ -185,7 +205,15 @@ export class TestAppPage {
     }
     let dataTemp = this.dataToSend.slice(0);
 
-    this.dataToSend = {data: dataTemp};
+    let location;
+    if(this.geolocation){
+      location = [this.locationCoords.latitude,this.locationCoords.longitude];
+    }
+    else{
+      location = []
+    }
+
+    this.dataToSend = {Location: location, data: dataTemp};
     //this.dataToSend = {type:"", observation:"", data: dataTemp};
     //console.log(this.dataToSend);
     //this.dataToSend = "hello world";
@@ -243,6 +271,22 @@ export class TestAppPage {
       alert.present();
     }
 
+  }
+
+
+  startLocationMonitoring(){
+    this.watch = this.geolocation.watchPosition();
+    this.subscriptionGPS = this.watch.subscribe((data) => {
+    // data can be a set of coordinates, or an error (if an error occurred).
+    // data.coords.latitude
+    // data.coords.longitude
+      this.locationCoords.latitude = data.coords.latitude;
+      this.locationCoords.longitude = data.coords.longitude;
+    });
+  }
+
+  stopLocationMonitoring(){
+    this.subscriptionGPS.unsubscribe();
   }
 
 }

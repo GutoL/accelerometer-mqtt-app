@@ -13,6 +13,9 @@ import { GenerateDatasetPage } from '../pages/generate-dataset/generate-dataset'
 import { TestAppPage } from '../pages/test-app/test-app';
 import { SendDatasetPage } from '../pages/send-dataset/send-dataset';
 
+import { Geolocation } from '@ionic-native/geolocation/ngx';
+// import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
+
 
 import {DeviceMotion} from '@ionic-native/device-motion';
 
@@ -49,6 +52,8 @@ import { SplashScreen } from '@ionic-native/splash-screen';
     StatusBar,
     SplashScreen,
     DeviceMotion,
+    Geolocation,
+    // AndroidPermissions,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })
