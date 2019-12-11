@@ -2,82 +2,79 @@
 # best tutorial: https://techtutorialsx.com/2017/04/23/python-subscribing-to-mqtt-topic/
 
 import paho.mqtt.subscribe as subscribe
-import paho.mqtt.publish as publish
+import paho.mqtt.client as mqtt
 
-import paho.mqtt.client as mqttClient
 import time
 import json
 import datetime
 import math
-import numpy as np
-import sys
 
+last_accelerometer_value = 0
+last_infrared_value = -1
 
-def on_connect(client, userdata, flags, rc):
+def evaluatedData(infrared, accelerometer):
+	if (not accelerometer):
+		return False
 
-    if rc == 0:
-        print("Connected to broker")
-
-        global Connected                #Use global variable
-        Connected = True                #Signal connection
-
-    else:
-        print("Connection failed")
-
-
-def evaluatedData(data):
-
-    try:
-        
+	try:
 		isFall = False
-        
-        for line in data['data']:
-            
-            timestamp = float(line['timestamp'])
-            x = line['x']
-            y = line['y']
-            z = line['z']
-            
-            latitude = list(data['Location'])[0]
-            longitude = list(data['Location'])[1]
-            
-            norm = math.sqrt( math.pow(x,2) + math.pow(y,2) + math.pow(z,2))
-            
-			if(norm>20):
-            	isFall = True
-                
-        if isFall:
-            hour = datetime.datetime.fromtimestamp(timestamp/1000.0)
-            print("Fall Detected! Latitude:",latitude,"longitude:",longitude,"Time:",hour.strftime("%d/%b/%Y %H:%M:%S"))
-        
+		for line in accelerometer['data']:
 
-    except Exception as e:
-        print("Error: " + str(e))
+			timestamp = float(line['timestamp'])
+			x = line['x']
+			y = line['y']
+			z = line['z']
 
-def on_message(client, userdata, message):
-    
-    print('Data received!')
-    try:
-        experiment = json.loads(message.payload)
-        evaluatedData(experiment)
+			latitude = list(accelerometer['Location'])[0]
+			longitude = list(accelerometer['Location'])[1]
 
-    except Exception as e:
-        print("Error: " + str(e))
-        #print(traceback.format_exc())
+			norm = math.sqrt( math.pow(x,2) + math.pow(y,2) + math.pow(z,2))
 
-############################## main ######################################
+			if(norm>20 and infrared == True):
+				isFall = True
 
-fp = open('config.txt','r')
+		if isFall:
+			hour = datetime.datetime.fromtimestamp(timestamp/1000.0)
+			print("Fall Detected! Latitude:",latitude,"longitude:",longitude,"Time:",hour.strftime("%d/%b/%Y %H:%M:%S"))
+		return isFall
 
-lines = fp.readlines()
+	except Exception as e:
+		print("Error: " + str(e))
 
-topic = str(lines[1]).rstrip()
+def on_accelerometer_message(client, userdata, message):
+		print('Accelerometer sensor data received!')
+		global last_accelerometer_value
+		last_accelerometer_value = json.loads(message.payload)
+		print(last_accelerometer_value)
 
-ip_broker = str(lines[3]).rstrip()
-port_broker = str(lines[5]).rstrip()
 
-ip_cloud = str(lines[7]).rstrip()
-port_cloud = str(lines[9]).rstrip()
 
-print("Subscribing to broker...")
-subscribe.callback(on_message, topic, hostname=ip_broker)
+def on_infrared_message(client, userdata, message):
+	print('Infrared sensor data received!')
+	global last_infrared_value
+	experiment = json.loads(message.payload)
+	last_infrared_value = experiment['value']
+	print(last_infrared_value)
+
+def handle_data():
+	tmp1 = 0
+	tmp2 = -1
+	while True:
+		# Evaluate fall detection when one of the two sensor data changed
+		if (tmp1 != last_accelerometer_value or tmp2 != last_infrared_value):
+			tmp1 = last_accelerometer_value
+			tmp2 = last_infrared_value
+			evaluatedData(last_infrared_value, last_accelerometer_value)
+
+def setup_subscriptions():
+	client = mqtt.Client("test22")
+
+	client.message_callback_add("/sensor/accelerometer", on_accelerometer_message)
+	client.message_callback_add("/sensor/infrared", on_infrared_message)
+
+	client.connect("localhost")
+	client.subscribe("/sensor/#")
+	client.loop_start()
+
+setup_subscriptions()
+handle_data()
