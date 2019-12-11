@@ -66,15 +66,20 @@ def handle_data():
 			tmp2 = last_infrared_value
 			evaluatedData(last_infrared_value, last_accelerometer_value)
 
-def setup_subscriptions():
-	client = mqtt.Client("test22")
+def setup_subscriptions(config):
+	client = mqtt.Client()
+	client.message_callback_add(config["topics"]["accelerometer"], on_accelerometer_message)
+	client.message_callback_add(config["topics"]["infrared"], on_infrared_message)
 
-	client.message_callback_add("/sensor/accelerometer", on_accelerometer_message)
-	client.message_callback_add("/sensor/infrared", on_infrared_message)
-
-	client.connect("localhost")
+	client.connect(config["fog"]["hostname"], port=config["fog"]["port"])
 	client.subscribe("/sensor/#")
 	client.loop_start()
 
-setup_subscriptions()
+def read_configuration():
+	return json.loads(open('config.json').read())
+
+
+config = read_configuration()
+setup_subscriptions(config)
+print("Start to listening sensor data")
 handle_data()

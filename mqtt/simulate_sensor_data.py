@@ -7,8 +7,13 @@ import threading
 
 from random import *
 
-client = mqtt.Client("test")
-client.connect("localhost")
+def read_configuration():
+	return json.loads(open('config.json').read())
+
+
+config = read_configuration()
+client = mqtt.Client()
+client.connect(config["fog"]["hostname"], port=config["fog"]["port"])
 
 def publish_random_accelerometer():
     data = {
@@ -20,12 +25,13 @@ def publish_random_accelerometer():
             'z': 2,
         }]
     }
-    client.publish("/sensor/accelerometer", json.dumps(data))
+    client.publish(config["topics"]["accelerometer"], json.dumps(data))
 
 def publish_random_infrared():
     data = {
         'value': randint(0,1)
     }
+    client.publish(config["topics"]["infrared"], json.dumps(data))
     threading.Timer(5, publish_random_infrared).start()
 
 
