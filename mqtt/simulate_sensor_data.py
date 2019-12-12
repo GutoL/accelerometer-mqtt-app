@@ -4,12 +4,15 @@ import json
 import time
 import argparse
 import threading
-
+import keyboard
 from random import *
+
+from pynput import keyboard
+
+infrared_value = 0
 
 def read_configuration():
 	return json.loads(open('config.json').read())
-
 
 config = read_configuration()
 client = mqtt.Client()
@@ -27,20 +30,29 @@ def publish_random_accelerometer():
     }
     client.publish(config["topics"]["accelerometer"], json.dumps(data))
 
-def publish_random_infrared():
+def publish_random_infrared(time=15):
+    print("Publishing infrared data: ", infrared_value)
     data = {
-        'value': randint(0,1)
+        'value': infrared_value
     }
     client.publish(config["topics"]["infrared"], json.dumps(data))
-    threading.Timer(5, publish_random_infrared).start()
-
+    threading.Timer(time, publish_random_infrared, [time]).start()
 
 parser = argparse.ArgumentParser(description='Publish random sensor data.')
 parser.add_argument('-a', action="store_true", help='publish accelerometer data to the broker')
-parser.add_argument('-ir', action="store_true", help='publish accelerometer data to the broker')
+parser.add_argument('-ir', action="store", default=15, help='publish accelerometer data to the broker')
 args = parser.parse_args()
+
+def on_press(key):
+    if key == keyboard.Key.space:
+        global infrared_value
+        infrared_value = 1 - infrared_value
+        print(infrared_value)
 
 if args.a:
     publish_random_accelerometer()
 elif args.ir:
-    publish_random_infrared()
+    listener = keyboard.Listener(
+        on_press=on_press)
+    listener.start()
+    publish_random_infrared(time=int(args.ir))
