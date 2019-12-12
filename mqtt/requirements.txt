@@ -32,7 +32,7 @@ pylint==1.8.4
 pyparsing==2.2.0
 python-dateutil==2.7.2
 pytz==2018.3
-PyYAML==3.12
+PyYAML==5.1
 scikit-learn==0.19.1
 scipy==1.0.1
 singledispatch==3.4.0.3
