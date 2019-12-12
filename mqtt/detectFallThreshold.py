@@ -12,47 +12,50 @@ import math
 last_accelerometer_value = 0
 last_infrared_value = -1
 infrared_positive_count = 0
+fall_detected_acc = False
+fall_detected_ir = False
 
-def evaluatedData(infrared, accelerometer, ir_occurrences_limit=10):
-	if (not accelerometer):
+def is_fall_detected_on_accelerometer():
+	if (not last_accelerometer_value):
 		return False
 
-	try:
-		isFall = False
-		for line in accelerometer['data']:
+	isFall = False
+	for line in last_accelerometer_value['data']:
+		timestamp = float(line['timestamp'])
+		x = line['x']
+		y = line['y']
+		z = line['z']
 
-			timestamp = float(line['timestamp'])
-			x = line['x']
-			y = line['y']
-			z = line['z']
+		latitude = list(last_accelerometer_value['Location'])[0]
+		longitude = list(last_accelerometer_value['Location'])[1]
 
-			latitude = list(accelerometer['Location'])[0]
-			longitude = list(accelerometer['Location'])[1]
+		norm = math.sqrt( math.pow(x,2) + math.pow(y,2) + math.pow(z,2))
 
-			norm = math.sqrt( math.pow(x,2) + math.pow(y,2) + math.pow(z,2))
-			if(norm > 20 and infrared_positive_count >= 10):
-				isFall = True
+		if norm > 20:
+			isFall = True
 
-		if isFall:
-			hour = datetime.datetime.fromtimestamp(timestamp/1000.0)
-			print("Fall Detected! Latitude:",latitude,"longitude:",longitude,"Time:",hour.strftime("%d/%b/%Y %H:%M:%S"))
-		return isFall
+	return isFall
 
-	except Exception as e:
-		print("Error: " + str(e))
+def is_fall_detected_on_infra_red(limit=10):
+	return infrared_positive_count >= limit
 
 def on_accelerometer_message(client, userdata, message):
+	if fall_detected_acc == True:
+		return
+
 	print('Accelerometer sensor data received!')
 	global last_accelerometer_value
 	last_accelerometer_value = json.loads(message.payload)
-	print(last_accelerometer_value)
 
 def on_infrared_message(client, userdata, message):
-	print('Infrared sensor data received!')
+	if fall_detected_acc == False or fall_detected_ir == True:
+		return
+
 	global last_infrared_value
 	global infrared_positive_count
 	experiment = json.loads(message.payload)
 	last_infrared_value = experiment['value']
+	print('Infrared sensor data received: ', last_infrared_value)
 	if last_infrared_value == True:
 		infrared_positive_count += 1
 	else:
@@ -60,14 +63,21 @@ def on_infrared_message(client, userdata, message):
 
 def handle_data(config):
 	tmp1 = 0
-	tmp2 = -1
-	tmp3 = 0
+	tmp2 = False
+	global fall_detected_acc
+	global fall_detected_ir
+
 	while True:
-		# Evaluate fall detection when one of the two sensor data changed
-		if (tmp1 != last_accelerometer_value or tmp2 != last_infrared_value or tmp3 != infrared_positive_count):
+		if (tmp1 != last_accelerometer_value and is_fall_detected_on_accelerometer()):
+			print('Fall detected by the accelerometer sensor')
+			fall_detected_acc = True
 			tmp1 = last_accelerometer_value
-			tmp2 = last_infrared_value
-			evaluatedData(last_infrared_value, last_accelerometer_value, config["occurrences"])
+
+		fall_detected_ir = is_fall_detected_on_infra_red(config["occurrences"])
+		if ((fall_detected_acc == True and fall_detected_ir == True) and tmp2 == False):
+			print("Fall detected by the infra red sensor")
+			print("Sending alert to external services...")
+			tmp2 = True
 
 def setup_subscriptions(config):
 	client = mqtt.Client()
