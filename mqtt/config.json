@@ -10,5 +10,6 @@
     "cloud": {
         "hostname": "34.253.52.154",
         "port": 1883
-    }
+    },
+    "occurrences": 20
 }

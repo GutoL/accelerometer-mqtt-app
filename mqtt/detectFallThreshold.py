@@ -13,7 +13,7 @@ last_accelerometer_value = 0
 last_infrared_value = -1
 infrared_positive_count = 0
 
-def evaluatedData(infrared, accelerometer):
+def evaluatedData(infrared, accelerometer, ir_occurrences_limit=10):
 	if (not accelerometer):
 		return False
 
@@ -58,7 +58,7 @@ def on_infrared_message(client, userdata, message):
 	else:
 		infrared_positive_count = 0
 
-def handle_data():
+def handle_data(config):
 	tmp1 = 0
 	tmp2 = -1
 	tmp3 = 0
@@ -67,7 +67,7 @@ def handle_data():
 		if (tmp1 != last_accelerometer_value or tmp2 != last_infrared_value or tmp3 != infrared_positive_count):
 			tmp1 = last_accelerometer_value
 			tmp2 = last_infrared_value
-			evaluatedData(last_infrared_value, last_accelerometer_value)
+			evaluatedData(last_infrared_value, last_accelerometer_value, config["occurrences"])
 
 def setup_subscriptions(config):
 	client = mqtt.Client()
@@ -84,4 +84,4 @@ def read_configuration():
 config = read_configuration()
 setup_subscriptions(config)
 print("Start to listening sensor data")
-handle_data()
+handle_data(config)
