@@ -2,82 +2,131 @@
 # best tutorial: https://techtutorialsx.com/2017/04/23/python-subscribing-to-mqtt-topic/
 
 import paho.mqtt.subscribe as subscribe
-import paho.mqtt.publish as publish
+import paho.mqtt.client as mqtt
 
-import paho.mqtt.client as mqttClient
 import time
 import json
 import datetime
 import math
-import numpy as np
-import sys
+
+last_accelerometer_value = 0
+last_infrared_value = -1
+infrared_positive_count = 0
+fall_detected_acc = False
+fall_detected_ir = False
+alertMessage = ""
+
+def is_fall_detected_on_accelerometer():
+	global last_accelerometer_value
+	if (not last_accelerometer_value):
+		return False
+
+	global alertMessage
+
+	isFall = False
+	for line in last_accelerometer_value['data']:
+		timestamp = float(line['timestamp'])
+		x = line['x']
+		y = line['y']
+		z = line['z']
+
+		latitude = list(last_accelerometer_value['Location'])[0]
+		longitude = list(last_accelerometer_value['Location'])[1]
+
+		norm = math.sqrt( math.pow(x,2) + math.pow(y,2) + math.pow(z,2))
+
+		if norm > 20:
+			hour = datetime.datetime.fromtimestamp(timestamp/1000.0)
+			alertMessage = "Latitude:",latitude,"longitude:",longitude,"Time:",hour.strftime("%d/%b/%Y %H:%M:%S")
+			isFall = True
+
+	last_accelerometer_value = None # cleaning the las message from accelerometer
+	return isFall
+
+def is_fall_detected_on_infra_red(limit=10):
+	global infrared_positive_count
+
+	if infrared_positive_count >= limit:
+		infrared_positive_count = 0
+		return True
+	else:
+		return False
+
+	#return infrared_positive_count >= limit
+
+def on_accelerometer_message(client, userdata, message):
+	if fall_detected_acc == True:
+		return
+
+	print('Accelerometer sensor data received!')
+	global last_accelerometer_value
+	last_accelerometer_value = json.loads(message.payload)
 
 
-def on_connect(client, userdata, flags, rc):
+count_false_positive_acc = 0
+def on_infrared_message(client, userdata, message):
+	global fall_detected_acc
+	global count_false_positive_acc
 
-    if rc == 0:
-        print("Connected to broker")
+	if fall_detected_acc == False:
+		return
 
-        global Connected                #Use global variable
-        Connected = True                #Signal connection
+	# if fall_detected_acc == False or fall_detected_ir == True:
+	# 	return
 
-    else:
-        print("Connection failed")
+	global last_infrared_value
+	global infrared_positive_count
+	experiment = json.loads(message.payload)
+	last_infrared_value = experiment['value']
+	print('Infrared sensor data received: ', last_infrared_value)
+
+	if last_infrared_value == True:
+		infrared_positive_count += 1
+
+	elif fall_detected_acc == True and last_infrared_value == False:
+		count_false_positive_acc += 1
+		if(count_false_positive_acc >= 6):
+			fall_detected_acc = False
+			count_false_positive_acc = 0
+			infrared_positive_count = 0
+			print("False positive from accelerometer...")
 
 
-def evaluatedData(data):
+def handle_data(config):
+	tmp1 = 0
+	tmp2 = False
+	global fall_detected_acc
+	global fall_detected_ir
+	global alertMessage
 
-    try:
-        
-		isFall = False
-        
-        for line in data['data']:
-            
-            timestamp = float(line['timestamp'])
-            x = line['x']
-            y = line['y']
-            z = line['z']
-            
-            latitude = list(data['Location'])[0]
-            longitude = list(data['Location'])[1]
-            
-            norm = math.sqrt( math.pow(x,2) + math.pow(y,2) + math.pow(z,2))
-            
-			if(norm>20):
-            	isFall = True
-                
-        if isFall:
-            hour = datetime.datetime.fromtimestamp(timestamp/1000.0)
-            print("Fall Detected! Latitude:",latitude,"longitude:",longitude,"Time:",hour.strftime("%d/%b/%Y %H:%M:%S"))
-        
+	while True:
+		if (is_fall_detected_on_accelerometer() and fall_detected_acc == False):
+			print('Fall detected by the accelerometer sensor')
+			fall_detected_acc = True
 
-    except Exception as e:
-        print("Error: " + str(e))
+		if (fall_detected_acc):
+			fall_detected_ir = is_fall_detected_on_infra_red(config["occurrences"])
 
-def on_message(client, userdata, message):
-    
-    print('Data received!')
-    try:
-        experiment = json.loads(message.payload)
-        evaluatedData(experiment)
+			if(fall_detected_ir):
+				print("Fall detected by the infra red sensor")
+				print("Sending alert to external services... Information about fall:",alertMessage)
+				fall_detected_acc = False
+				fall_detected_ir = False
 
-    except Exception as e:
-        print("Error: " + str(e))
-        #print(traceback.format_exc())
 
-############################## main ######################################
+def setup_subscriptions(config):
+	client = mqtt.Client()
+	client.message_callback_add(config["topics"]["accelerometer"], on_accelerometer_message)
+	client.message_callback_add(config["topics"]["infrared"], on_infrared_message)
 
-fp = open('config.txt','r')
+	client.connect(config["fog"]["hostname"], port=config["fog"]["port"])
+	client.subscribe("/sensor/#")
+	client.loop_start()
 
-lines = fp.readlines()
+def read_configuration():
+	return json.loads(open('config.json').read())
 
-topic = str(lines[1]).rstrip()
-
-ip_broker = str(lines[3]).rstrip()
-port_broker = str(lines[5]).rstrip()
-
-ip_cloud = str(lines[7]).rstrip()
-port_cloud = str(lines[9]).rstrip()
-
-print("Subscribing to broker...")
-subscribe.callback(on_message, topic, hostname=ip_broker)
+config = read_configuration()
+setup_subscriptions(config)
+print("Start to listening sensor data")
+handle_data(config)
